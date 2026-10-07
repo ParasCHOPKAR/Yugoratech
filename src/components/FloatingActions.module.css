@@ -1,0 +1,85 @@
+.floatingButtons {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+@keyframes popUp {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.callBtn,
+.whatsappBtn,
+.scrollTopBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  border: none;
+  cursor: pointer;
+}
+
+.callBtn {
+  background-color: #0073ff;
+}
+
+.callBtn:hover {
+  background-color: #004ecc;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 115, 255, 0.4);
+}
+
+.whatsappBtn {
+  background-color: #25D366;
+}
+
+.whatsappBtn:hover {
+  background-color: #128C7E;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(37, 211, 102, 0.4);
+}
+
+.scrollTopBtn {
+  background: linear-gradient(135deg, #0073ff 0%, #004ecc 100%);
+}
+
+.scrollTopBtn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 115, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .floatingButtons {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .callBtn,
+  .whatsappBtn,
+  .scrollTopBtn {
+    width: 48px;
+    height: 48px;
+  }
+}
