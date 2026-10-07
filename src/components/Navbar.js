@@ -1,21 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { servicesData, supportServices } from './ServiceData';
+import { ArrowRight, ChevronDown, ChevronRight } from 'lucide-react';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [openMobileCategories, setOpenMobileCategories] = useState({});
+  const [forceCloseMegaMenu, setForceCloseMegaMenu] = useState(false);
 
   const isActive = (path) => {
     if (path === '/') return pathname === '/';
     return pathname?.startsWith(path);
   };
 
-  const closeMobile = () => setMobileMenuOpen(false);
+  const closeMenu = () => {
+    setMobileMenuOpen(false);
+    setMobileServicesOpen(false);
+    setOpenMobileCategories({});
+    setForceCloseMegaMenu(true);
+  };
+
+  const toggleMobileCategory = (idx) => {
+    setOpenMobileCategories((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const handleServicesClick = (e) => {
+    e.preventDefault();
+    setForceCloseMegaMenu(true);
+  };
+
+  const handleServicesMouseLeave = () => {
+    if (forceCloseMegaMenu) {
+      setForceCloseMegaMenu(false);
+    }
+  };
 
   return (
     <>
@@ -114,125 +139,84 @@ export default function Navbar() {
                   className={`${styles.navLinkItem} ${isActive('/about') ? styles.activeLink : ''}`}
                 >
                   <span>About Us</span>
-                  <svg className={styles.dropdownChevron} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  <ChevronDown className={styles.dropdownChevron} size={14} strokeWidth={2.5} />
                 </Link>
               </li>
 
-              <li className={styles.hasDropdown}>
-                <Link
-                  href="/services"
+              <li 
+                className={styles.hasDropdown}
+                onMouseLeave={handleServicesMouseLeave}
+              >
+                <button
+                  type="button"
                   className={`${styles.navLinkItem} ${isActive('/services') ? styles.activeLink : ''}`}
+                  aria-expanded={!forceCloseMegaMenu ? "true" : "false"}
+                  aria-haspopup="true"
+                  onClick={handleServicesClick}
                 >
                   <span>Services</span>
-                  <svg className={styles.dropdownChevron} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </Link>
-                <div className={styles.megaMenu}>
+                  <ChevronDown className={styles.dropdownChevron} size={14} strokeWidth={2.5} />
+                </button>
+                {!forceCloseMegaMenu && (
+                  <div className={styles.megaMenu}>
                   <div className={styles.megaMenuInner}>
-                    <div className={styles.menuCol}>
-                      <span className={styles.colNumber}>01</span>
-                      <h4>DIGITAL PRESENCE</h4>
-                      <ul>
-                        <li>
-                          <Link href="/services/domain-hosting">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-                            <span>Domain Hosting</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/static-website">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                            <span>Static Website</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/dynamic-website">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-                            <span>Dynamic Website</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/ecommerce-website">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                            <span>E-Commerce Website</span>
-                          </Link>
-                        </li>
-                      </ul>
+                    <div className={styles.servicesGrid}>
+                      {servicesData.map((col, idx) => (
+                        <div key={idx} className={styles.menuCol}>
+                          <span className={styles.colNumber}>{col.number}</span>
+                          <h4>{col.title}</h4>
+                          <ul>
+                            {col.items.map((item, i) => {
+                              const Icon = item.icon;
+                              return (
+                                <li key={i}>
+                                  <Link href={item.path} className={styles.serviceLink} onClick={closeMenu}>
+                                    <Icon className={styles.itemIcon} size={18} strokeWidth={2} />
+                                    <span>{item.name}</span>
+                                    <ArrowRight className={styles.hoverArrow} size={14} />
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ))}
                     </div>
 
-                    <div className={styles.menuCol}>
-                      <span className={styles.colNumber}>02</span>
-                      <h4>MARKETING</h4>
-                      <ul>
-                        <li>
-                          <Link href="/services/seo">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            <span>SEO / AEO / GEO</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/digital-marketing">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-5v12L3 13v-2z"></path><path d="M11.6 16.8L9 22H6l2.3-5.2"></path></svg>
-                            <span>Digital Marketing</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/social-media-marketing">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                            <span>Social Media Marketing</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/graphic-design">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-9.8-10-8.8z"></path></svg>
-                            <span>Graphic Design &amp; Video</span>
-                          </Link>
-                        </li>
-                      </ul>
+                    <div className={styles.supportSection}>
+                      <h5>SUPPORT & MAINTENANCE</h5>
+                      <div className={styles.supportGrid}>
+                        {supportServices.map((item, i) => {
+                          const Icon = item.icon;
+                          return (
+                            <Link key={i} href={item.path} className={styles.supportLink} onClick={closeMenu}>
+                              <Icon className={styles.itemIcon} size={16} strokeWidth={2} />
+                              <span>{item.name}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <div className={styles.menuCol}>
-                      <span className={styles.colNumber}>03</span>
-                      <h4>ENTERPRISE</h4>
-                      <ul>
-                        <li>
-                          <Link href="/services/erp">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                            <span>ERP / CRM / HRMS</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/software-development">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                            <span>Software Development</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/services/customised-software">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-                            <span>Customised Software</span>
-                          </Link>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className={styles.menuCol}>
-                      <span className={styles.colNumber}>04</span>
-                      <h4>ADVANCED TECH</h4>
-                      <ul>
-                        <li>
-                          <Link href="/services/iot-solutions">
-                            <svg className={styles.itemIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-                            <span>IoT Solutions</span>
-                          </Link>
-                        </li>
-                      </ul>
+                    <div className={styles.bottomCtaSection}>
+                      <div className={styles.ctaButtons}>
+                        <Link href="/services" className={styles.exploreBtn} onClick={closeMenu}>
+                          Explore All Services <ArrowRight size={16} />
+                        </Link>
+                        <Link href="/contact" className={styles.bookBtn} onClick={closeMenu}>
+                          Book a Consultation
+                        </Link>
+                      </div>
+                      <div className={styles.features}>
+                        <span>✓ Result Driven</span>
+                        <span>✓ Dedicated Support</span>
+                        <span>✓ Transparent Process</span>
+                        <span>✓ Affordable Pricing</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+                )}
               </li>
 
               <li>
@@ -306,7 +290,7 @@ export default function Navbar() {
                 <Link
                   href="/"
                   className={isActive('/') ? styles.activeMobileLink : ''}
-                  onClick={closeMobile}
+                  onClick={closeMenu}
                 >
                   Home
                 </Link>
@@ -315,25 +299,103 @@ export default function Navbar() {
                 <Link
                   href="/about"
                   className={isActive('/about') ? styles.activeMobileLink : ''}
-                  onClick={closeMobile}
+                  onClick={closeMenu}
                 >
                   About Us
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/services"
-                  className={isActive('/services') ? styles.activeMobileLink : ''}
-                  onClick={closeMobile}
+              
+              {/* Mobile Services Accordion */}
+              <li className={styles.mobileAccordionItem}>
+                <button 
+                  className={styles.mobileAccordionHeader}
+                  onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+                  aria-expanded={mobileServicesOpen}
                 >
-                  Services
-                </Link>
+                  <span className={isActive('/services') ? styles.activeMobileLink : ''}>Services</span>
+                  <ChevronDown 
+                    className={styles.mobileChevron} 
+                    style={{ transform: mobileServicesOpen ? 'rotate(180deg)' : 'rotate(0)' }} 
+                    size={16} 
+                  />
+                </button>
+                
+                {mobileServicesOpen && (
+                  <div className={styles.mobileAccordionContent}>
+                    {servicesData.map((col, idx) => (
+                      <div key={idx} className={styles.mobileCategory}>
+                        <button 
+                          className={styles.mobileCategoryHeader}
+                          onClick={() => toggleMobileCategory(idx)}
+                          aria-expanded={openMobileCategories[idx]}
+                        >
+                          {col.title}
+                          <ChevronRight 
+                            size={14} 
+                            style={{ transform: openMobileCategories[idx] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s' }} 
+                          />
+                        </button>
+                        
+                        {openMobileCategories[idx] && (
+                          <ul className={styles.mobileCategoryList}>
+                            {col.items.map((item, i) => {
+                              const Icon = item.icon;
+                              return (
+                                <li key={i}>
+                                  <Link href={item.path} onClick={closeMenu}>
+                                    <Icon size={14} className={styles.mobileCategoryIcon} />
+                                    {item.name}
+                                  </Link>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+
+                    <div className={styles.mobileCategory}>
+                      <button 
+                        className={styles.mobileCategoryHeader}
+                        onClick={() => toggleMobileCategory('support')}
+                        aria-expanded={openMobileCategories['support']}
+                      >
+                        SUPPORT & MAINTENANCE
+                        <ChevronRight 
+                          size={14} 
+                          style={{ transform: openMobileCategories['support'] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s' }} 
+                        />
+                      </button>
+                      
+                      {openMobileCategories['support'] && (
+                        <ul className={styles.mobileCategoryList}>
+                          {supportServices.map((item, i) => {
+                            const Icon = item.icon;
+                            return (
+                              <li key={i}>
+                                <Link href={item.path} onClick={closeMenu}>
+                                  <Icon size={14} className={styles.mobileCategoryIcon} />
+                                  {item.name}
+                                </Link>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                    
+                    <Link href="/services" className={styles.mobileExploreBtn} onClick={closeMenu}>
+                      Explore All Services <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                )}
               </li>
+
               <li>
                 <Link
                   href="/blog"
                   className={isActive('/blog') ? styles.activeMobileLink : ''}
-                  onClick={closeMobile}
+                  onClick={closeMenu}
                 >
                   Blog
                 </Link>
@@ -342,7 +404,7 @@ export default function Navbar() {
                 <Link
                   href="/contact"
                   className={isActive('/contact') ? styles.activeMobileLink : ''}
-                  onClick={closeMobile}
+                  onClick={closeMenu}
                 >
                   Contact Us
                 </Link>
